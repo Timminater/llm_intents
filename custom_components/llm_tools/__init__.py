@@ -17,14 +17,14 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Tools for Assist integration."""
+    """Set up the LLM Tools integration."""
     hass.data.setdefault(DOMAIN, {})
     _LOGGER.info(f"Setting up {ADDON_NAME} integration")
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Tools for Assist from a config entry."""
+    """Set up LLM Tools from a config entry."""
     _LOGGER.info(f"Setting up {ADDON_NAME} for entry: %s", entry.entry_id)
     await setup_llm_functions(hass, entry.data)
     _LOGGER.info(f"{ADDON_NAME} functions successfully set up")

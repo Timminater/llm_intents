@@ -1,4 +1,4 @@
-# Tools for Assist _(Custom Integration for Home Assistant)_
+# LLM Tools _(Custom Integration for Home Assistant)_
 
 Additional tools for LLM-backed Assist for Home Assistant:
 
@@ -19,7 +19,7 @@ A caching layer is utilised in order to reduce both API usage and latency on rep
 
 Have [HACS](https://hacs.xyz/) installed, this will allow you to update easily.
 
-* Adding Tools for Assist to HACS can be using this button:
+* Adding LLM Tools to HACS can be using this button:
   [![image](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=skye-harris&repository=llm-intents&category=integration)
 
 <br>
@@ -27,12 +27,12 @@ Have [HACS](https://hacs.xyz/) installed, this will allow you to update easily.
 > [!NOTE]
 > If the button above doesn't work, add `https://github.com/skye-harris/llm_intents` as a custom repository of type Integration in HACS.
 
-* Click install on the `Tools for Assist` integration.
+* Click install on the `LLM Tools` integration.
 * Restart Home Assistant.
 
 <details><summary>Manual Install</summary>
 
-* Copy the `llm-intents`  folder from [latest release](https://github.com/skye-harris/llm_intents/releases/latest) to the [
+* Copy the `llm_tools` folder from [latest release](https://github.com/skye-harris/llm_intents/releases/latest) to the [
   `custom_components` folder](https://developers.home-assistant.io/docs/creating_integration_file_structure/#where-home-assistant-looks-for-integrations) in your config directory.
 * Restart the Home Assistant.
 
@@ -44,7 +44,7 @@ After installation, configure the integration through Home Assistant's UI:
 
 1. Go to `Settings` → `Devices & Services`.
 2. Click `Add Integration`.
-3. Search for `Tools for Assist`.
+3. Search for `LLM Tools`.
 4. Follow the setup wizard to configure your desired services.
 
 ## Conversation Agent Configuration

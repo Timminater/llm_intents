@@ -7,7 +7,7 @@ import pytest
 from homeassistant.core import State
 from homeassistant.util import dt as dt_util
 
-from custom_components.llm_intents.History import EntityHistoryTool
+from custom_components.llm_tools.History import EntityHistoryTool
 
 
 class TestEntityHistoryTool:
@@ -161,7 +161,7 @@ class TestEntityHistoryTool:
         }
 
         with patch(
-            "custom_components.llm_intents.History.async_get_history",
+            "custom_components.llm_tools.History.EntityHistoryTool._async_get_state_history",
             AsyncMock(return_value=mock_result),
         ):
             last_change = await tool._find_last_state_change(hass, "person.tim", "home")
@@ -195,7 +195,7 @@ class TestEntityHistoryTool:
         }
 
         with patch(
-            "custom_components.llm_intents.History.async_get_history",
+            "custom_components.llm_tools.History.EntityHistoryTool._async_get_state_history",
             AsyncMock(return_value=mock_result),
         ):
             last_change = await tool._find_last_state_change(hass, "person.tim", "home")
@@ -210,7 +210,7 @@ class TestEntityHistoryTool:
 
         # Mock history call error
         with patch(
-            "custom_components.llm_intents.History.async_get_history",
+            "custom_components.llm_tools.History.EntityHistoryTool._async_get_state_history",
             AsyncMock(side_effect=Exception("Service error")),
         ):
             last_change = await tool._find_last_state_change(hass, "person.tim", "home")

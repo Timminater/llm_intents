@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure Tools for Assist",
-        "description": "Select the services you want to enable for Tools for Assist.",
+        "title": "Configure LLM Tools",
+        "description": "Select the services you want to enable for LLM Tools.",
         "data": {
           "brave_search_enabled": "Enable Brave Web Search",
           "google_places_enabled": "Enable Google Places",

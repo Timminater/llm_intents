@@ -1,4 +1,4 @@
-"""Tests for LLM Intents Custom Integration."""
+"""Tests for LLM Tools Custom Integration."""
 
 from unittest.mock import patch
 
@@ -9,7 +9,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 async def async_init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Set up the LLM Intents integration for testing."""
+    """Set up the LLM Tools integration for testing."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -18,6 +18,6 @@ async def async_init_integration(
 def patch_async_setup_entry(return_value=True):
     """Patch async setup entry to return True."""
     return patch(
-        "custom_components.llm_intents.async_setup_entry",
+        "custom_components.llm_tools.async_setup_entry",
         return_value=return_value,
     )

@@ -1,4 +1,4 @@
-"""Tests for the Tools for Assist integration init module."""
+"""Tests for the LLM Tools integration init module."""
 
 from __future__ import annotations
 
@@ -8,13 +8,13 @@ import pytest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.llm_intents import (
+from custom_components.llm_tools import (
     DOMAIN,
     async_setup,
     async_setup_entry,
     async_unload_entry,
 )
-from custom_components.llm_intents.const import CONF_BRAVE_ENABLED
+from custom_components.llm_tools.const import CONF_BRAVE_ENABLED
 
 
 @pytest.fixture
@@ -47,7 +47,7 @@ async def test_async_setup_entry_triggers_llm_setup(
 ) -> None:
     """Setting up an entry should delegate to setup_llm_functions."""
     with patch(
-        "custom_components.llm_intents.llm_functions.setup_llm_functions"
+        "custom_components.llm_tools.llm_functions.setup_llm_functions"
     ) as mock_setup:
         result = await async_setup_entry(hass, config_entry)
 
@@ -61,7 +61,7 @@ async def test_async_unload_entry_calls_cleanup(
 ) -> None:
     """Unloading an entry should clean up registered APIs."""
     with patch(
-        "custom_components.llm_intents.llm_functions.cleanup_llm_functions"
+        "custom_components.llm_tools.llm_functions.cleanup_llm_functions"
     ) as mock_cleanup:
         assert await async_unload_entry(hass, config_entry)
 

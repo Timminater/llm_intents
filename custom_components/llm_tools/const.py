@@ -1,12 +1,11 @@
-"""
-Constants for the llm_intents custom component.
+"""Constants for the llm_tools custom component.
 
 This module defines configuration keys and domain names for various intent
 integrations.
 """
 
-DOMAIN = "llm_intents"
-ADDON_NAME = "Tools for Assist"
+DOMAIN = "llm_tools"
+ADDON_NAME = "LLM Tools"
 
 SEARCH_API_NAME = "Search Services"
 WEATHER_API_NAME = "Weather Forecast"

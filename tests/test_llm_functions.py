@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 import pytest
 from homeassistant.core import HomeAssistant
 
-from custom_components.llm_intents.const import (
+from custom_components.llm_tools.const import (
     CONF_BRAVE_ENABLED,
     CONF_GOOGLE_PLACES_ENABLED,
     CONF_HISTORY_ENABLED,
@@ -17,7 +17,7 @@ from custom_components.llm_intents.const import (
     CONF_WIKIPEDIA_ENABLED,
     DOMAIN,
 )
-from custom_components.llm_intents.llm_functions import (
+from custom_components.llm_tools.llm_functions import (
     cleanup_llm_functions,
     setup_llm_functions,
 )
@@ -57,7 +57,7 @@ async def test_setup_llm_functions_registers_enabled_apis(hass: HomeAssistant) -
         return _undo
 
     with patch(
-        "custom_components.llm_intents.llm_functions.llm.async_register_api",
+        "custom_components.llm_tools.llm_functions.llm.async_register_api",
         side_effect=fake_register,
     ):
         await setup_llm_functions(hass, config)

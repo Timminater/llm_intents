@@ -2,11 +2,12 @@ import logging
 from datetime import datetime, timedelta
 
 import voluptuous as vol
+from homeassistant.components.recorder.history import state_changes_during_period
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import llm
 from homeassistant.util.json import JsonObjectType
 from homeassistant.util import dt as dt_util
-from homeassistant.components.recorder.history import async_get_history
+from homeassistant.helpers.recorder import get_instance
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,25 +49,50 @@ class EntityHistoryTool(llm.Tool):
         start_time = end_time - timedelta(hours=12)
         return start_time, end_time
 
+    async def _async_get_state_history(
+        self,
+        hass: HomeAssistant,
+        start_time: datetime,
+        end_time: datetime,
+        entity_id: str,
+        *,
+        include_start_time_state: bool = False,
+        descending: bool = False,
+        limit: int | None = None,
+    ) -> dict[str, list[State]]:
+        """Retrieve history data from the recorder."""
+        instance = get_instance(hass)
+        return await instance.async_add_executor_job(
+            state_changes_during_period,
+            hass,
+            start_time,
+            end_time,
+            entity_id,
+            False,
+            descending,
+            limit,
+            include_start_time_state,
+        )
+
     async def _find_last_state_change(self, hass: HomeAssistant, entity_id: str, target_state: str) -> datetime | None:
         """Find the last time an entity had a specific state."""
         try:
             # Get history for the last 7 days to find the state change
             end_time = dt_util.utcnow()
             start_time = end_time - timedelta(days=7)
-            history_data = await async_get_history(
+            history_data = await self._async_get_state_history(
                 hass,
                 start_time,
-                end_time=end_time,
-                entity_id=[entity_id],
+                end_time,
+                entity_id,
                 include_start_time_state=False,
-                significant_changes_only=False,
             )
 
-            if not history_data or entity_id not in history_data:
+            entity_key = entity_id.lower()
+            history = history_data.get(entity_key) or history_data.get(entity_id)
+            if not history:
                 return None
 
-            history = history_data[entity_id]
             last_change_time: datetime | None = None
 
             # Iterate through history in reverse (newest first)
@@ -242,7 +268,7 @@ class EntityHistoryTool(llm.Tool):
                 
                 # Add a small buffer to exclude the state change itself
                 start_time = start_time + timedelta(seconds=1)
-                end_time = datetime.now()
+                end_time = dt_util.utcnow()
                 
             else:
                 # Use provided times or defaults
@@ -266,21 +292,19 @@ class EntityHistoryTool(llm.Tool):
                 return {"error": "start_time must be before end_time"}
 
             # Get history data
-            history_data = await async_get_history(
+            history_data = await self._async_get_state_history(
                 hass,
                 start_time,
-                end_time=end_time,
-                entity_id=[entity_id],
+                end_time,
+                entity_id,
                 include_start_time_state=False,
-                significant_changes_only=False,
             )
 
-            if not history_data or entity_id not in history_data:
-                return {"error": f"No history data found for entity {entity_id}"}
+            entity_key = entity_id.lower()
+            history = history_data.get(entity_key) or history_data.get(entity_id)
 
-            history = history_data[entity_id]
             if not history:
-                return {"error": f"No history data available for {entity_id} in the specified time range"}
+                return {"error": f"No history data found for entity {entity_id}"}
 
             # Determine if we should summarize
             should_summarize = summarize or (summarize is None and len(history) > 20)

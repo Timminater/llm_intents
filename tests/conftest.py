@@ -1,4 +1,4 @@
-"""Test configuration for LLM Intents integration."""
+"""Test configuration for LLM Tools integration."""
 
 from unittest.mock import AsyncMock, MagicMock
 
@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from custom_components.llm_intents.const import (
+from custom_components.llm_tools.const import (
     CONF_BRAVE_API_KEY,
     CONF_BRAVE_NUM_RESULTS,
     CONF_GOOGLE_PLACES_API_KEY,

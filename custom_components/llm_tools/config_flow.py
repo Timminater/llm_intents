@@ -1,4 +1,4 @@
-"""Config flow for the Tools for Assist integration."""
+"""Config flow for the LLM Tools integration."""
 
 from __future__ import annotations
 
@@ -201,8 +201,8 @@ def get_next_step(
     return None
 
 
-class LlmIntentsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for the Tools for Assist integration."""
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for the LLM Tools integration."""
 
     VERSION = 1
 
@@ -305,11 +305,11 @@ class LlmIntentsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Provide an options flow for existing entries."""
-        return LlmIntentsOptionsFlow(config_entry)
+        return OptionsFlow(config_entry)
 
 
-class LlmIntentsOptionsFlow(config_entries.OptionsFlowWithReload):
-    """Handle an options flow for an existing Tools for Assist config entry."""
+class OptionsFlow(config_entries.OptionsFlowWithReload):
+    """Handle an options flow for an existing LLM Tools config entry."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the options flow with the existing entry."""

@@ -1,4 +1,4 @@
-"""Tests for the Tools for Assist config flow."""
+"""Tests for the LLM Tools config flow."""
 
 from __future__ import annotations
 
@@ -9,21 +9,21 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.llm_intents.config_flow import (
+from custom_components.llm_tools.config_flow import (
     STEP_BRAVE,
     STEP_GOOGLE_PLACES,
     STEP_INIT,
     STEP_USER,
     STEP_WEATHER,
     STEP_WIKIPEDIA,
+    ConfigFlow,
     INITIAL_CONFIG_STEP_ORDER,
+    OptionsFlow,
     SEARCH_STEP_ORDER,
-    LlmIntentsConfigFlow,
-    LlmIntentsOptionsFlow,
     get_next_step,
     get_step_user_data_schema,
 )
-from custom_components.llm_intents.const import (
+from custom_components.llm_tools.const import (
     ADDON_NAME,
     CONF_BRAVE_ENABLED,
     CONF_GOOGLE_PLACES_ENABLED,
@@ -78,20 +78,20 @@ class TestConfigFlow:
     """Tests for the initial configuration flow."""
 
     @pytest.fixture
-    def flow(self, hass: HomeAssistant) -> LlmIntentsConfigFlow:
+    def flow(self, hass: HomeAssistant) -> ConfigFlow:
         """Return an initialised config flow."""
-        flow = LlmIntentsConfigFlow()
+        flow = ConfigFlow()
         flow.hass = hass
         return flow
 
-    async def test_async_step_user_initial_form(self, flow: LlmIntentsConfigFlow) -> None:
+    async def test_async_step_user_initial_form(self, flow: ConfigFlow) -> None:
         """First step should present the selection form."""
         with patch.object(flow, "_async_current_entries", return_value=[]):
             result = await flow.async_step_user()
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == STEP_USER
 
-    async def test_async_step_user_brave_selected(self, flow: LlmIntentsConfigFlow) -> None:
+    async def test_async_step_user_brave_selected(self, flow: ConfigFlow) -> None:
         """Selecting Brave should lead to the Brave configuration step."""
         with (
             patch.object(flow, "_async_current_entries", return_value=[]),
@@ -103,7 +103,7 @@ class TestConfigFlow:
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == STEP_BRAVE
 
-    async def test_async_step_user_no_services(self, flow: LlmIntentsConfigFlow) -> None:
+    async def test_async_step_user_no_services(self, flow: ConfigFlow) -> None:
         """No selections should immediately create the entry."""
         payload = {
             CONF_BRAVE_ENABLED: False,
@@ -141,26 +141,26 @@ class TestOptionsFlow:
         return entry
 
     @pytest.fixture
-    def options_flow(self, config_entry: Mock) -> LlmIntentsOptionsFlow:
+    def options_flow(self, config_entry: Mock) -> OptionsFlow:
         """Return an initialised options flow."""
-        flow = LlmIntentsOptionsFlow(config_entry)
+        flow = OptionsFlow(config_entry)
         flow.hass = Mock(spec=HomeAssistant)
         return flow
 
-    async def test_async_step_init_menu(self, options_flow: LlmIntentsOptionsFlow) -> None:
+    async def test_async_step_init_menu(self, options_flow: OptionsFlow) -> None:
         """Initial step should display menu options."""
         result = await options_flow.async_step_init()
         assert result["type"] == FlowResultType.MENU
         assert result["step_id"] == STEP_INIT
 
-    async def test_async_step_configure_history_toggle(self, options_flow: LlmIntentsOptionsFlow) -> None:
+    async def test_async_step_configure_history_toggle(self, options_flow: OptionsFlow) -> None:
         """Verify the history toggle appears in the configure form."""
         result = await options_flow.async_step_configure()
         form_schema = result["data_schema"]
         data = form_schema({})
         assert CONF_HISTORY_ENABLED in data
 
-    def test_get_current_services_description(self, options_flow: LlmIntentsOptionsFlow) -> None:
+    def test_get_current_services_description(self, options_flow: OptionsFlow) -> None:
         """Ensure the service summary mentions history when enabled."""
         summary = options_flow._get_current_services_description()
         assert "Entity History" in summary
