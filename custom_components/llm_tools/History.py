@@ -113,13 +113,6 @@ class EntityHistoryTool(llm.Tool):
         "Retrieve historical data and state changes for Home Assistant entities. "
         "Use this to get past values, status changes, or trends for any entity."
     )
-    response_instruction = """
-    Use the history results only as background context for your answer.
-    Do not expose internal reasoning, analysis steps, raw metrics, tables, timestamps, or debugging details unless the user explicitly asks for them.
-    Reply in plain text only.
-    For automations, announcements, and TTS, return only the final user-facing message in 1-2 short sentences.
-    If the user asked for a greeting or announcement, output only that greeting or announcement.
-    """
 
     parameters = vol.Schema(
         {
@@ -729,6 +722,42 @@ class EntityHistoryTool(llm.Tool):
         body = [self._format_entry_text(entry) for entry in entries]
         return "\n".join([header, *body])
 
+    def _build_response_instruction(self, language: str | None) -> str:
+        """Build output instructions while preserving the conversation language."""
+        language_instruction = "Reply in the same language as the user."
+        if language:
+            normalized = language.strip().lower()
+            if normalized.startswith("nl"):
+                language_instruction = "Reply in Dutch."
+            elif normalized.startswith("en"):
+                language_instruction = "Reply in English."
+            else:
+                language_instruction = (
+                    f"Reply in the Home Assistant conversation language '{language}'. "
+                    "Do not switch languages unless the user explicitly does so."
+                )
+
+        return "\n".join(
+            [
+                "Use the history results only as background context for your answer.",
+                language_instruction,
+                (
+                    "Do not expose internal reasoning, analysis steps, raw metrics, "
+                    "tables, timestamps, or debugging details unless the user "
+                    "explicitly asks for them."
+                ),
+                "Reply in plain text only.",
+                (
+                    "For automations, announcements, and TTS, return only the final "
+                    "user-facing message in 1-2 short sentences."
+                ),
+                (
+                    "If the user asked for a greeting or announcement, output only "
+                    "that greeting or announcement."
+                ),
+            ]
+        )
+
     def _success_response(
         self,
         *,
@@ -741,6 +770,7 @@ class EntityHistoryTool(llm.Tool):
         entries: list[dict[str, JsonValueType]],
         metrics: dict[str, JsonValueType],
         result_text: str,
+        language: str | None,
     ) -> JsonObjectType:
         """Build a success response that matches the tool contract."""
         return self.wrap_response(
@@ -757,12 +787,15 @@ class EntityHistoryTool(llm.Tool):
                     "entries": entries,
                     "metrics": metrics,
                 },
-            }
+            },
+            language,
         )
 
-    def wrap_response(self, response: JsonObjectType) -> JsonObjectType:
+    def wrap_response(
+        self, response: JsonObjectType, language: str | None
+    ) -> JsonObjectType:
         """Add an instruction that constrains the final assistant phrasing."""
-        response["instruction"] = self.response_instruction
+        response["instruction"] = self._build_response_instruction(language)
         return response
 
     def _error_response(
@@ -772,6 +805,7 @@ class EntityHistoryTool(llm.Tool):
         entity_id: str | None = None,
         start_time: datetime | None = None,
         end_time: datetime | None = None,
+        language: str | None = None,
     ) -> JsonObjectType:
         """Build an error response that matches the tool contract."""
         return self.wrap_response(
@@ -784,6 +818,8 @@ class EntityHistoryTool(llm.Tool):
                     "end_time": self._isoformat(end_time),
                 },
             }
+            ,
+            language,
         )
 
     def _entity_is_currently_known(self, hass: HomeAssistant, entity_id: str) -> bool:
@@ -1001,8 +1037,7 @@ class EntityHistoryTool(llm.Tool):
         llm_context: llm.LLMContext,
     ) -> JsonObjectType:
         """Call the tool."""
-        del llm_context
-
+        language = llm_context.language
         entity_id = tool_input.tool_args.get("entity_id")
         _LOGGER.info("History requested for entity: %s", entity_id)
 
@@ -1064,6 +1099,7 @@ class EntityHistoryTool(llm.Tool):
                     entries=serialized_entries,
                     metrics=metrics,
                     result_text=result_text,
+                    language=language,
                 )
 
             result_text = self._build_timeline_text(request.entity_id, entries, request)
@@ -1077,6 +1113,7 @@ class EntityHistoryTool(llm.Tool):
                 entries=serialized_entries,
                 metrics={"entry_count": len(entries)},
                 result_text=result_text,
+                language=language,
             )
         except HistoryToolError as err:
             return self._error_response(
@@ -1085,10 +1122,12 @@ class EntityHistoryTool(llm.Tool):
                 or (entity_id.strip().lower() if isinstance(entity_id, str) else None),
                 start_time=err.start_time,
                 end_time=err.end_time,
+                language=language,
             )
         except Exception as err:
             _LOGGER.exception("History retrieval error")
             return self._error_response(
                 f"Error retrieving history: {err!s}",
                 entity_id=entity_id.strip().lower() if isinstance(entity_id, str) else None,
+                language=language,
             )

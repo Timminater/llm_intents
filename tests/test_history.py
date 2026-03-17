@@ -21,11 +21,11 @@ def _tool_input(**tool_args):
     return llm.ToolInput(tool_name="get_entity_history", tool_args=tool_args)
 
 
-def _llm_context() -> llm.LLMContext:
+def _llm_context(language: str = "en") -> llm.LLMContext:
     return llm.LLMContext(
         platform="test",
         context=None,
-        language="en",
+        language=language,
         assistant="assist",
         device_id=None,
     )
@@ -204,8 +204,37 @@ class TestEntityHistoryTool:
         assert result["data"]["entries"][0]["is_start_state"] is True
         assert result["data"]["entries"][1]["attributes"]["brightness"] == 60
         assert "instruction" in result
+        assert "Reply in English." in result["instruction"]
         assert "Do not expose internal reasoning" in result["instruction"]
         assert "State at range start" in result["result"]
+
+    @pytest.mark.asyncio
+    async def test_async_call_instruction_uses_requested_language(self) -> None:
+        """History responses should preserve the Home Assistant conversation language."""
+        tool = EntityHistoryTool()
+        hass = MagicMock()
+        hass.states.get.return_value = State("person.tim", "home")
+        base_time = datetime(2026, 3, 16, 8, 0, tzinfo=dt_util.UTC)
+
+        with patch.object(
+            tool,
+            "_async_get_significant_history",
+            AsyncMock(return_value=[_entry("home", base_time)]),
+        ):
+            result = await tool.async_call(
+                hass,
+                _tool_input(
+                    entity_id="person.tim",
+                    start_time=base_time.isoformat(),
+                    end_time=(base_time + timedelta(hours=1)).isoformat(),
+                    summarize=False,
+                ),
+                _llm_context(language="nl"),
+            )
+
+        assert result["success"] is True
+        assert "instruction" in result
+        assert "Reply in Dutch." in result["instruction"]
 
     @pytest.mark.asyncio
     async def test_async_call_since_state_summary_uses_statistics(self) -> None:
@@ -369,6 +398,7 @@ class TestEntityHistoryTool:
         assert result["data"]["start_time"] is None
         assert result["data"]["end_time"] is None
         assert "instruction" in result
+        assert "Reply in English." in result["instruction"]
         assert "plain text only" in result["instruction"]
 
     @pytest.mark.asyncio
