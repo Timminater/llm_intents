@@ -27,6 +27,8 @@ Use the Weather Services tools to access weather forecast data.
 
 HISTORY_SERVICES_PROMPT = """
 Use the Entity History tools to access historical data and state changes for Home Assistant entities.
+Use the tool output as evidence, not as a script to repeat back verbatim.
+Prefer short, plain-text answers and never expose internal reasoning or raw tool output unless the user explicitly asks for it.
 """.strip()
 
 # Brave-specific constants

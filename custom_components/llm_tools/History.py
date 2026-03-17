@@ -113,6 +113,13 @@ class EntityHistoryTool(llm.Tool):
         "Retrieve historical data and state changes for Home Assistant entities. "
         "Use this to get past values, status changes, or trends for any entity."
     )
+    response_instruction = """
+    Use the history results only as background context for your answer.
+    Do not expose internal reasoning, analysis steps, raw metrics, tables, timestamps, or debugging details unless the user explicitly asks for them.
+    Reply in plain text only.
+    For automations, announcements, and TTS, return only the final user-facing message in 1-2 short sentences.
+    If the user asked for a greeting or announcement, output only that greeting or announcement.
+    """
 
     parameters = vol.Schema(
         {
@@ -736,20 +743,27 @@ class EntityHistoryTool(llm.Tool):
         result_text: str,
     ) -> JsonObjectType:
         """Build a success response that matches the tool contract."""
-        return {
-            "success": True,
-            "result": result_text,
-            "data": {
-                "entity_id": entity_id,
-                "start_time": self._isoformat(start_time),
-                "end_time": self._isoformat(end_time),
-                "mode": mode,
-                "resolved_from": resolved_from,
-                "used_statistics": used_statistics,
-                "entries": entries,
-                "metrics": metrics,
-            },
-        }
+        return self.wrap_response(
+            {
+                "success": True,
+                "result": result_text,
+                "data": {
+                    "entity_id": entity_id,
+                    "start_time": self._isoformat(start_time),
+                    "end_time": self._isoformat(end_time),
+                    "mode": mode,
+                    "resolved_from": resolved_from,
+                    "used_statistics": used_statistics,
+                    "entries": entries,
+                    "metrics": metrics,
+                },
+            }
+        )
+
+    def wrap_response(self, response: JsonObjectType) -> JsonObjectType:
+        """Add an instruction that constrains the final assistant phrasing."""
+        response["instruction"] = self.response_instruction
+        return response
 
     def _error_response(
         self,
@@ -760,15 +774,17 @@ class EntityHistoryTool(llm.Tool):
         end_time: datetime | None = None,
     ) -> JsonObjectType:
         """Build an error response that matches the tool contract."""
-        return {
-            "success": False,
-            "error": message,
-            "data": {
-                "entity_id": entity_id,
-                "start_time": self._isoformat(start_time),
-                "end_time": self._isoformat(end_time),
-            },
-        }
+        return self.wrap_response(
+            {
+                "success": False,
+                "error": message,
+                "data": {
+                    "entity_id": entity_id,
+                    "start_time": self._isoformat(start_time),
+                    "end_time": self._isoformat(end_time),
+                },
+            }
+        )
 
     def _entity_is_currently_known(self, hass: HomeAssistant, entity_id: str) -> bool:
         """Return whether an entity currently exists in Home Assistant state."""

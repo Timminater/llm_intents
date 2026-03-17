@@ -203,6 +203,8 @@ class TestEntityHistoryTool:
         ).isoformat()
         assert result["data"]["entries"][0]["is_start_state"] is True
         assert result["data"]["entries"][1]["attributes"]["brightness"] == 60
+        assert "instruction" in result
+        assert "Do not expose internal reasoning" in result["instruction"]
         assert "State at range start" in result["result"]
 
     @pytest.mark.asyncio
@@ -366,6 +368,8 @@ class TestEntityHistoryTool:
         assert result["data"]["entity_id"] == "sensor.test"
         assert result["data"]["start_time"] is None
         assert result["data"]["end_time"] is None
+        assert "instruction" in result
+        assert "plain text only" in result["instruction"]
 
     @pytest.mark.asyncio
     async def test_async_call_rejects_conflicting_since_state_and_start_time(self) -> None:
